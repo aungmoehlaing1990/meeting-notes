@@ -1,0 +1,7 @@
+# FFmpeg shared libraries — NOT tracked in git.
+# The server (whisper_server.py) looks for ffmpeg/bin next to itself.
+# On first setup, run:  python get_ffmpeg.py
+# This downloads the ~90 MB shared build (with avcodec/avformat/avutil DLLs
+# that pyannote's torchcodec decoder requires) into ./ffmpeg/bin.
+*.dll
+*.exe

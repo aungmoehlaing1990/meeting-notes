@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Meeting Notes</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --border: #e5e5ea;
+    --accent: #007aff;
+    --accent-light: #e8f0fe;
+    --danger: #ff3b30;
+    --danger-light: #ffeaea;
+    --success: #34c759;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+  }
+  button { cursor: pointer; border: none; background: none; }
+  .container { max-width: 880px; margin: 0 auto; padding: 16px; }
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin: 0; flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 16px; border-radius: var(--radius);
+    font-weight: 600; font-size: 15px;
+    background: var(--card); border: 1px solid var(--border);
+    transition: background 0.15s, border-color 0.15s;
+    min-height: 44px;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #0066d6; }
+  .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--accent); }
+  .btn-ghost:hover { background: var(--accent-light); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; min-height: 36px; }
+  .search-box {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--card);
+    margin-bottom: 16px; min-height: 44px;
+  }
+  .note-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+    box-shadow: var(--shadow); cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .note-card:active { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  .note-card-head { display: flex; align-items: center; gap: 10px; }
+  .note-card-thumb {
+    width: 48px; height: 48px; border-radius: 6px; object-fit: cover;
+    background: var(--border); flex-shrink: 0;
+  }
+  .note-card-thumb-placeholder {
+    width: 48px; height: 48px; border-radius: 6px;
+    background: var(--border); display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 20px; flex-shrink: 0;
+  }
+  .note-card-body { flex: 1; min-width: 0; }
+  .note-card-title { font-weight: 600; font-size: 16px; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-card-meta { font-size: 13px; color: var(--muted); }
+  .note-card-followup { font-size: 12px; color: var(--accent); margin-top: 2px; }
+  .empty-state {
+    text-align: center; padding: 48px 20px; color: var(--muted);
+  }
+  .empty-state h2 { font-weight: 600; margin: 0 0 8px; color: var(--text); }
+  .editor {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .editor h2 { font-size: 17px; font-weight: 600; margin: 0 0 10px; }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block; }
+  .field-input {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg);
+    min-height: 44px;
+  }
+  .field-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row > * { flex: 1; }
+  textarea.field-input { resize: vertical; min-height: 80px; font-family: inherit; }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-option {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); cursor: pointer; min-height: 40px;
+  }
+  .radio-option.active { border-color: var(--accent); background: var(--accent-light); }
+  .radio-option input { display: none; }
+  .section-title {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    padding: 8px 12px; background: var(--bg);
+    border-radius: 8px; margin: 12px 0 8px;
+    border-left: 3px solid var(--accent);
+  }
+  .action-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; margin-bottom: 8px;
+    position: relative;
+  }
+  .action-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .action-card-del {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--danger-light); color: var(--danger);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .action-card-del:hover { background: var(--danger); color: #fff; }
+  .action-card input, .action-card select {
+    width: 100%; padding: 8px 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--card);
+    min-height: 38px; font-size: 14px;
+  }
+  .action-card input:focus, .action-card select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .action-card-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 2px; display: block; }
+  .photo-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px; margin-top: 8px;
+  }
+  .photo-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px; text-align: center;
+  }
+  .photo-item img {
+    width: 100%; height: 100px; object-fit: cover; border-radius: 6px;
+    background: var(--border);
+  }
+  .photo-item-caption {
+    margin-top: 6px; font-size: 13px;
+  }
+  .photo-item-caption input {
+    width: 100%; padding: 4px 6px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--bg);
+    font-size: 12px; min-height: 30px;
+  }
+  .photo-item-caption input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .photo-item-del {
+    margin-top: 6px; padding: 4px 8px; font-size: 12px;
+    background: var(--danger-light); color: var(--danger);
+    border-radius: 4px; border: none; min-height: 28px;
+  }
+  .audio-box {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; background: var(--bg); border-radius: 8px;
+    border: 1px solid var(--border); margin-top: 8px;
+  }
+  .audio-box audio { flex: 1; height: 40px; }
+  .audio-box input { display: none; }
+  .audio-box-label {
+    font-size: 13px; color: var(--muted); cursor: pointer;
+    padding: 8px 14px; border: 1px dashed var(--border);
+    border-radius: 6px; text-align: center; min-height: 40px;
+  }
+  .audio-box-label:hover { border-color: var(--accent); color: var(--accent); }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .flex-between .btn { flex-shrink: 0; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .help-panel {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .help-panel.open { display: flex; }
+  .help-content {
+    background: var(--card); border-radius: var(--radius);
+    max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;
+    padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .help-content h2 { margin: 0 0 12px; font-size: 18px; }
+  .help-content h3 { margin: 16px 0 6px; font-size: 15px; }
+  .help-content p, .help-content li { font-size: 14px; margin: 4px 0; }
+  .help-content ol { padding-left: 20px; margin: 4px 0; }
+  .help-content code {
+    background: var(--bg); padding: 2px 6px; border-radius: 4px;
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13px;
+  }
+  .help-content pre {
+    background: var(--bg); padding: 10px; border-radius: 6px;
+    overflow-x: auto; font-size: 13px; margin: 6px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .help-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border);
+    font-size: 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .help-close:hover { background: var(--border); }
+  .settings-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .settings-modal.open { display: flex; }
+  .settings-content {
+    background: var(--card); border-radius: var(--radius);
+    max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto;
+    padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .settings-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border);
+    font-size: 18px; display: flex; align-items: center; justify-content: center;
+  }
+  .settings-close:hover { background: var(--border); }
+  .insights-list { padding-left: 20px; margin: 4px 0; font-size: 14px; }
+  .insights-empty { color: var(--muted); font-size: 13px; font-style: italic; padding: 4px 0; }
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; padding: 10px 20px;
+    border-radius: 20px; font-size: 14px; z-index: 200;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .loading { text-align: center; padding: 20px; color: var(--muted); }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px; min-height: 38px;
+    margin-bottom: 12px;
+  }
+  .back-btn:hover { background: var(--border); }
+  .form-select {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg);
+    min-height: 44px; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) {
+    .container { padding: 12px; }
+    .meta-grid { grid-template-columns: 1fr; }
+    .field-row { flex-direction: column; }
+    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    .header h1 { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <!-- List View -->
+  <div id="listView">
+    <div class="header">
+      <h1>Meeting Notes</h1>
+      <button class="btn btn-ghost btn-sm" id="helpBtnList" title="Help">❓ Help</button>
+      <button class="btn btn-ghost btn-sm" id="settingsBtnList" title="Transcription server settings">⚙️</button>
+      </div>
+    <input type="text" class="search-box" id="searchBox" placeholder="Search meetings (title, attendees, tags)...">
+    <div id="notesList"></div>
+    <div style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="newMeetingBtn" style="flex:1; min-height:48px;">+ New Meeting</button>
+    </div>
+  </div>
+
+  <!-- Editor View -->
+  <div id="editorView" style="display:none;">
+    <button class="back-btn" id="backToListBtn">← Back to list</button>
+    <div class="editor">
+      <div class="flex-between">
+        <h2 style="margin:0;">Edit Meeting</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-ghost" id="helpBtnEditor">❓ Help</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor">
+      <h2>Meeting Info</h2>
+      <input type="text" class="field-input" id="editTitle" placeholder="Meeting title">
+      <div class="meta-grid" style="margin-top:10px;">
+        <div>
+          <label class="field-label">Date</label>
+          <input type="date" class="field-input" id="editDate">
+        </div>
+        <div>
+          <label class="field-label">Time</label>
+          <input type="time" class="field-input" id="editTime">
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="field-label">Duration (e.g. 1h 30m, or 90 min)</label>
+        <input type="text" class="field-input" id="editDuration" placeholder="1h 30m">
+      </div>
+      <div style="margin-top:10px;">
+        <label class="field-label">Attendees (one per line)</label>
+        <textarea class="field-input" id="editAttendees" rows="2" placeholder="Name 1&#10;Name 2"></textarea>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="field-label">Tags (comma separated)</label>
+        <input type="text" class="field-input" id="editTags" placeholder="sprint review, client x">
+      </div>
+    </div>
+
+    <div class="editor">
+      <h2>Meeting Type</h2>
+      <div class="radio-group" id="meetingTypeGroup">
+        <label class="radio-option active" data-value="standalone">
+          <input type="radio" name="meetingType" value="standalone" checked>
+          <span>Standalone meeting</span>
+        </label>
+        <label class="radio-option" data-value="followup">
+          <input type="radio" name="meetingType" value="followup">
+          <span>Follow-up to previous meeting</span>
+        </label>
+      </div>
+      <div id="followupFields" style="display:none; margin-top:10px;">
+        <label class="field-label">Follow-up to (select previous meeting)</label>
+        <select class="form-select" id="editParentId"><option value="">— Select —</option></select>
+        <div style="margin-top:8px;">
+          <label class="field-label">What this follow-up covers (optional)</label>
+          <input type="text" class="field-input" id="editFollowupNote" placeholder="e.g. Action items from the sprint review">
+        </div>
+      </div>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">Transcript</div>
+      <textarea class="field-input" id="editTranscript" rows="8" placeholder="Paste the transcript here (from Whisper or your transcription tool). Light editing only."></textarea>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">Decisions</div>
+      <textarea class="field-input" id="editDecisions" rows="3" placeholder="List decisions made during the meeting, one per line or as a paragraph."></textarea>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">AI Report (from the transcript)</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Auto-generated — review and edit before sharing. Enable the local LLM (see Help) for an executive summary and conclusions.</div>
+      <div id="insightsSummary" style="margin-bottom:8px;"></div>
+      <div id="insightsConclusions" style="margin-bottom:8px;"></div>
+      <div id="insightsTopics" style="margin-bottom:8px;"></div>
+      <div id="insightsNextSteps" style="margin-bottom:8px;"></div>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">Action Items</div>
+      <div id="actionItemsContainer"></div>
+      <button class="btn btn-sm" id="addActionItemBtn" style="margin-top:8px;">+ Add Action Item</button>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">Photos</div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+      <button class="btn btn-sm" id="addPhotosBtn" style="margin-top:8px;">+ Add Photos</button>
+    </div>
+
+    <div class="editor">
+      <div class="section-title">Audio Recording</div>
+      <div class="audio-box">
+        <audio id="audioPlayer" controls></audio>
+        <label class="audio-box-label" for="audioInput">📁 Import audio file</label>
+        <input type="file" id="audioInput" accept="audio/*">
+        <button class="btn btn-sm btn-ghost" id="removeAudioBtn" style="flex-shrink:0;">✕</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="transcribeBtn">🔊 Transcribe (Whisper + speaker labels)</button>
+        <span id="transcribeStatus" style="font-size:13px;color:var(--muted);"></span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-primary" id="saveBtn">Save Meeting</button>
+      <button class="btn" id="exportDocxBtn">Export .docx</button>
+      <button class="btn" id="exportMdBtn">Export Markdown</button>
+      <button class="btn" id="exportNoteBtn">Export Note (transfer)</button>
+      <button class="btn btn-danger" id="deleteBtn">Delete</button>
+    </div>
+  </div>
+
+  <!-- Help Panel -->
+  <div class="settings-modal" id="settingsModal">
+    <div class="settings-content">
+      <button class="settings-close" id="settingsCloseBtn">✕</button>
+      <h2>Transcription Server Settings</h2>
+      <p style="font-size:14px;color:var(--text);margin:0 0 10px;">
+        The <strong>Transcribe</strong> button sends your audio to a local Whisper server
+        running on your machine (Whisper large-v3 + speaker diarization).
+        The server must be running for transcription to work.
+      </p>
+      <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Server URL</label>
+      <input type="text" class="field-input" id="serverUrlInput" placeholder="http://localhost:8765">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn btn-sm" id="testServerBtn">Test Connection</button>
+        <button class="btn btn-sm btn-primary" id="saveServerBtn">Save</button>
+      </div>
+      <button class="btn btn-sm btn-danger" id="openServerGuideBtn" style="margin-top:10px;width:100%;">Open Server Setup Guide (Help)</button>
+      <div id="serverTestResult" style="margin-top:8px;font-size:13px;"></div>
+    </div>
+  </div>
+  <div class="help-panel" id="helpPanel">
+    <div class="help-content">
+      <button class="help-close" id="helpCloseBtn">✕</button>
+      <h2>Meeting Notes — Help</h2>
+      <h3>Overview</h3>
+      <p>Record the meeting on your phone (audio + photos). Open this app after the meeting to create a structured note. This app runs fully offline in your browser. For automatic transcription, it talks to a local Whisper server on your own machine — no cloud, no API billing.</p>
+
+      <h3>Typical workflow</h3>
+      <ol>
+        <li>End the meeting. Save the audio recording and photos from your phone.</li>
+        <li>Start the local transcription server (see setup below).</li>
+        <li>Open this app (on phone or desktop). Tap "New Meeting".</li>
+        <li>Import the audio file and photos (from your device).</li>
+        <li>Tap <strong>🔊 Transcribe</strong> in the Audio Recording section. The server transcribes with Whisper large-v3, identifies speakers (Speaker 1, 2, 3…), extracts decisions, action items, topics, and next steps. It fills the form automatically.</li>
+        <li>Light edit: fix names, numbers, and any wrong speaker labels.</li>
+        <li>Fill in title, date, attendees.</li>
+        <li>Save. Export .docx to share with superiors (photos embedded). Export Markdown for your archive.</li>
+      </ol>
+
+      <h3>Setting up the transcription server (one-time, on your desktop)</h3>
+      <p>The <strong>Transcribe</strong> button sends your audio to a small Python server (<code>whisper_server.py</code>, included with this app) that runs <strong>Whisper large-v3</strong> (best local transcription) plus <strong>pyannote speaker diarization</strong> (who said what → Speaker 1, Speaker 2, …).</p>
+
+      <h3>Step 1: Prerequisites</h3>
+      <ol>
+        <li><strong>Python 3.11+</strong> installed (you have 3.11.15).</li>
+        <li><strong>ffmpeg</strong> on your PATH (required by Whisper and pyannote):
+          <ul>
+            <li>Windows: run <code>winget install Gyan.FFmpeg</code> in a terminal.
+            <strong>Important:</strong> pyannote also needs FFmpeg's <em>shared</em> DLLs (avcodec-XX.dll etc.).
+            The <code>whisper_server.py</code> that ships with this app looks for a <code>ffmpeg\bin</code> folder
+            next to it and adds it to PATH automatically — that folder is included in the GitHub repo, so if you
+            clone the repo you get it for free. If you run the script from elsewhere, make sure an FFmpeg build
+            <em>with</em> shared DLLs is reachable (the repo's <code>ffmpeg/</code> folder works).</li>
+            <li>Verify: <code>ffmpeg -version</code> should show version info.</li>
+          </ul>
+        </li>
+        <li><strong>HuggingFace account + free token</strong> (required by the pyannote speaker models):
+          <ul>
+            <li>Create an account at <a href="https://huggingface.co/join">huggingface.co</a>.</li>
+            <li>Create a token at <a href="https://huggingface.co/settings/tokens">huggingface.co/settings/tokens</a> (default "read" scope is fine).</li>
+            <li>Accept the user agreements on <strong>three</strong> pyannote model pages (the pipeline uses all three, and each is gated separately):
+              <a href="https://huggingface.co/pyannote/speaker-diarization-3.1">pyannote/speaker-diarization-3.1</a>,
+              <a href="https://huggingface.co/pyannote/speaker-diarization-community-1">pyannote/speaker-diarization-community-1</a>,
+              <a href="https://huggingface.co/pyannote/segmentation-3.0">pyannote/segmentation-3.0</a>.</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h3>Step 2: Install</h3>
+      <pre>pip install flask openai-whisper pyannote.audio</pre>
+      <p>Also make sure the <code>torch</code> dependency installed cleanly (it comes with whisper). First run of the server downloads:
+      Whisper large-v3 (~2.9 GB, once) and the pyannote models (~1 GB, once). Subsequent starts use the cache — no re-download.</p>
+
+      <h3>Step 3: Run the server (each time before transcribing)</h3>
+      <pre>python "C:\Users\Aung moe Hlaing\whisper_server.py" --hf-token YOUR_TOKEN</pre>
+      <p>Wait until you see "Server starting on http://127.0.0.1:8765" in the terminal. Keep this window open while you transcribe. (You can also set the <code>HF_TOKEN</code> environment variable instead of --hf-token.)</p>
+
+      <h3>Step 4: In the app</h3>
+      <ul>
+        <li>Tap <strong>⚙️</strong> (settings) in the top-right of the notes list. The server URL defaults to <code>http://localhost:8765</code>. Tap "Test Connection" to confirm it reaches the server, then "Save".</li>
+        <li>In the editor, import your audio, then tap <strong>🔊 Transcribe</strong>. On CPU, large-v3 can take several minutes for a long recording — the status text will tell you it's working.</li>
+        <li>Results fill in automatically: speaker-labeled transcript, decisions, action items (owner extracted when it says "X will do Y"), detected topics, and next steps / follow-ups — shown in the "AI Report" section and the editable Decisions / Action Items fields.</li>
+      </ul>
+
+      <h3>Optional: enable the local LLM for professional-grade reports (recommended)</h3>
+      <p>Pattern-based extraction is a first draft. For a real executive summary, conclusions, and sharper action items, run <strong>Ollama</strong> (a free, local LLM runner — no cloud, no API key) and restart the server with <code>--llm</code>. The server calls the LLM through its OpenAI-compatible API and replaces the heuristic results with the LLM's.</p>
+      <pre>winget install Ollama.Ollama        # or install from ollama.com
+ollama pull llama3.1:8b             # first run downloads the model (~4.7 GB)</pre>
+      <p>Then start the transcription server with the LLM enabled:</p>
+      <pre>python "C:\Users\Aung moe Hlaing\whisper_server.py" --hf-token YOUR_TOKEN --llm</pre>
+      <p>Notes: defaults are <code>--llm-url http://localhost:11434/v1</code> and <code>--llm-model llama3.1:8b</code>. Use a bigger model (<code>llama3.1:70b</code>) if your GPU/RAM handles it, or a smaller one (e.g. <code>qwen2.5:7b</code>) for slower machines. If the LLM is down or errors, the server automatically falls back to pattern-based extraction, so Transcribe always works.</p>
+
+      <h3>What the intelligence layer does (and doesn't) do</h3>
+      <ul>
+        <li><strong>Speaker labels</strong> (Speaker 1/2/3…) come from acoustic diarization. They are consistent within the recording but <em>unlabeled</em> — you'll want to mentally map "Speaker 1 = Jane". Fixing labels in the transcript text is quick.</li>
+        <li><strong>Without --llm:</strong> decisions / action items / topics / next steps come from keyword + pattern matching. They catch the obvious but can miss or mis-catch — a first draft.</li>
+        <li><strong>With --llm:</strong> the local LLM reads the whole speaker-labeled transcript and produces an executive summary, conclusions, topics, decisions, action items (with owners and due dates), and what's expected at the next meeting. Much closer to a professional report — but still verify names, numbers, and commitments before sharing.</li>
+      </ul>
+
+      <h3>On the phone</h3>
+      <p>The app is fully usable on the phone (import, edit, export). For automatic transcription from the phone, run the Whisper server on your desktop and set the server URL to your desktop's LAN address (e.g. <code>http://192.168.x.x:8765</code>) — phone and desktop must be on the same Wi-Fi. Note: large audio uploads over Wi-Fi can take a while. Alternatively transcribe on the desktop and move the note to the phone via Export Note / Import Note.</p>
+
+      <h3>Export formats</h3>
+      <ul>
+        <li><strong>.docx (primary):</strong> Full note with embedded photos, action items table, decisions. Share this with superiors. The audio file is not embedded in the .docx — keep the audio file alongside it if needed.</li>
+        <li><strong>Markdown (secondary):</strong> Same content in Markdown. Photos are referenced by filename (not embedded). Good for your own archive and other tools.</li>
+        <li><strong>Export Note (transfer):</strong> Exports one meeting note as a JSON file (with photos and audio encoded). Import it on another device to move the note between phone and desktop.</li>
+      </ul>
+
+      <h3>Notes storage</h3>
+      <p>Notes are stored locally in your browser's IndexedDB. They are not synced to the cloud. To move notes between devices, use "Export Note" / "Import Note". Clearing browser data clears your notes.</p>
+
+      <h3>Keyboard shortcuts</h3>
+      <ul>
+        <li>On desktop, press <code>Esc</code> to go back to the notes list from the editor.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   Meeting Notes App — Single-file HTML
+   IndexedDB storage, DOCX + Markdown export, follow-up links,
+   photo captions, audio player, Whisper help panel,
+   responsive for phone + desktop.
+   ============================================================ */
+
+const DB_NAME = "MeetingNotesDB";
+const DB_VERSION = 1;
+const STORE_NAME = "notes";
+
+/* ---------- IndexedDB ---------- */
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_NAME)) {
+        const store = d.createObjectStore(STORE_NAME, { keyPath: "id" });
+        store.createIndex("updatedAt", "updatedAt", { unique: false });
+        store.createIndex("type", "type", { unique: false });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => { reject(e.target.error); };
+  });
+}
+
+function dbPut(note) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.put(note);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGet(id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDelete(id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbAll() {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbQueryIndex(indexName, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const idx = store.index(indexName);
+    const req = idx.getAll(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/* ---------- Helpers ---------- */
+function generateId() {
+  return "n_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+}
+
+function nowISO() {
+  return new Date().toISOString();
+}
+
+function parseAttendees(text) {
+  return text.split("\n").map(s => s.trim()).filter(Boolean);
+}
+
+function formatAttendees(arr) {
+  return arr.join("\n");
+}
+
+function parseTags(text) {
+  return text.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function formatTags(arr) {
+  return arr.join(", ");
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function base64ToBlob(base64, mimeType) {
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
+}
+
+function blobToDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function showToast(msg, duration) {
+  duration = duration || 2500;
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), duration);
+}
+
+/* ---------- CRC32 + ZIP + DOCX ---------- */
+const crcTable = new Int32Array(256);
+for (let n = 0; n < 256; n++) {
+  let c = n;
+  for (let k = 0; k < 8; k++) {
+    if (c & 1) c = 0xedb88320 ^ (c >>> 1);
+    else c = c >>> 1;
+  }
+  crcTable[n] = c;
+}
+
+function crc32(data) {
+  let c = 0xffffffff;
+  for (let i = 0; i < data.length; i++) {
+    c = crcTable[(c ^ data[i]) & 0xff] ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+async function deflateBytes(data) {
+  // ZIP stores DEFLATE without the zlib wrapper, so we must use "deflate-raw"
+  // (CompressionStream's "deflate" adds a 2-byte zlib header + adler32 trailer
+  //  that ZIP readers reject).
+  const cs = new CompressionStream("deflate-raw");
+  const writer = cs.writable.getWriter();
+  writer.write(data);
+  writer.close();
+  return new Response(cs.readable).arrayBuffer();
+}
+
+async function createZip(entries) {
+  const blobs = [];
+  const centralDir = [];
+  let offset = 0;
+
+  for (const e of entries) {
+    const data = e.data;
+    const nameBytes = new TextEncoder().encode(e.name);
+    const crc = crc32(data);
+    const compressedBuf = await deflateBytes(data);
+    const compressed = new Uint8Array(compressedBuf);
+
+    const lhLen = 30 + nameBytes.length;
+    const lh = new Uint8Array(lhLen);
+    const dv = new DataView(lh.buffer);
+    // All ZIP fields are little-endian.
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0, true);
+    dv.setUint16(8, 8, true);
+    dv.setUint16(10, 0, true);
+    dv.setUint16(12, 0, true);
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, compressed.length, true);
+    dv.setUint32(22, data.length, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);
+    lh.set(nameBytes, 30);
+
+    blobs.push(new Blob([lh]));
+    blobs.push(new Blob([compressed]));
+
+    centralDir.push({
+      nameBytes, compressed, crc,
+      compressedSize: compressed.length,
+      uncompressedSize: data.length,
+      localHeaderOffset: offset
+    });
+
+    offset += lhLen + compressed.length;
+  }
+
+  const cdBlobs = [];
+  for (const cd of centralDir) {
+    const cdLen = 46 + cd.nameBytes.length;
+    const cdBuf = new Uint8Array(cdLen);
+    const dv = new DataView(cdBuf.buffer);
+    dv.setUint32(0, 0x02014b50, true);
+    dv.setUint16(4, 0, true);
+    dv.setUint16(6, 20, true);
+    dv.setUint16(8, 0, true);
+    dv.setUint16(10, 8, true);
+    dv.setUint16(12, 0, true);
+    dv.setUint16(14, 0, true);
+    dv.setUint32(16, cd.crc, true);
+    dv.setUint32(20, cd.compressedSize, true);
+    dv.setUint32(24, cd.uncompressedSize, true);
+    dv.setUint16(28, cd.nameBytes.length, true);
+    dv.setUint16(30, 0, true);
+    dv.setUint16(32, 0, true);
+    dv.setUint16(34, 0, true);
+    dv.setUint16(36, 0, true);
+    dv.setUint32(38, 0, true);
+    dv.setUint32(42, cd.localHeaderOffset, true);
+    cdBuf.set(cd.nameBytes, 46);
+    cdBlobs.push(new Blob([cdBuf]));
+  }
+
+  const cdBlob = new Blob(cdBlobs);
+  const cdBytes = await cdBlob.arrayBuffer();
+  const cdUint8 = new Uint8Array(cdBytes);
+
+  const eocd = new Uint8Array(22);
+  const eocdView = new DataView(eocd.buffer);
+  eocdView.setUint32(0, 0x06054b50, true);
+  eocdView.setUint16(4, 0, true);
+  eocdView.setUint16(6, 0, true);
+  eocdView.setUint16(8, centralDir.length, true);
+  eocdView.setUint16(10, centralDir.length, true);
+  eocdView.setUint32(12, cdBytes.byteLength, true);
+  eocdView.setUint32(16, offset, true);
+  eocdView.setUint16(20, 0, true);
+
+  blobs.push(new Blob([cdUint8]));
+  blobs.push(new Blob([eocd]));
+
+  return new Blob(blobs);
+}
+
+async function blobToPng(blob) {
+  const img = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0);
+  return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+}
+
+function escapeXml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+function emuFromPx(px) {
+  return Math.round(px * 9525);
+}
+
+async function exportDocx(note) {
+  const files = {};
+
+  // [Content_Types].xml
+  let contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+  files["[Content_Types].xml"] = new TextEncoder().encode(contentTypes);
+
+  // _rels/.rels
+  files["_rels/.rels"] = new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+  // word/_rels/document.xml.rels
+  let relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+  files["word/_rels/document.xml.rels"] = new TextEncoder().encode(relsXml);
+
+  // word/styles.xml (minimal)
+  files["word/styles.xml"] = new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+    <w:qFormat/>
+  </w:style>
+  <w:style w:type="character" w:default="1" w:styleId="DefaultParagraphFont">
+    <w:name w:val="Default Paragraph Font"/>
+    <w:semiHidden/>
+    <w:unhideWhenUsed/>
+  </w:style>
+</w:styles>`);
+
+  // Build document.xml
+  let docParts = [];
+  const addPara = (text, bold) => {
+    const btag = bold ? "<w:b/>" : "";
+    docParts.push(`<w:p><w:r>${btag}<w:t>${escapeXml(text)}</w:t></w:r></w:p>`);
+  };
+
+  const title = note.title || "Untitled Meeting";
+  addPara(title, true);
+  addPara("");
+
+  const dateStr = note.date ? `Date: ${note.date}` : "";
+  const timeStr = note.time ? `Time: ${note.time}` : "";
+  const durStr = note.duration ? `Duration: ${note.duration}` : "";
+  const metaParts = [dateStr, timeStr, durStr].filter(Boolean);
+  if (metaParts.length) addPara(metaParts.join("  |  "));
+  addPara("");
+
+  if (note.attendees && note.attendees.length) {
+    addPara("Attendees:", true);
+    note.attendees.forEach(a => addPara("• " + a));
+    addPara("");
+  }
+
+  if (note.type === "followup" && note.parentId) {
+    addPara("This is a follow-up to a previous meeting.", true);
+    if (note.followupNote) addPara("Note: " + note.followupNote);
+    addPara("");
+  }
+
+  if (note.aiReport) {
+    const r = note.aiReport;
+    if (r.summary) {
+      addPara("Executive Summary", true);
+      addPara(r.summary);
+      addPara("");
+    }
+    if (r.topics && r.topics.length) {
+      addPara("Topics Discussed", true);
+      r.topics.forEach(t => addPara("• " + t));
+      addPara("");
+    }
+    if (r.conclusions && r.conclusions.length) {
+      addPara("Conclusions", true);
+      r.conclusions.forEach(c => addPara("• " + c));
+      addPara("");
+    }
+    if (r.next_steps && r.next_steps.length) {
+      addPara("Next Steps / Expected at Next Meeting", true);
+      r.next_steps.forEach(n => addPara("• " + n));
+      addPara("");
+    }
+  }
+
+  if (note.transcript) {
+    addPara("Transcript:", true);
+    const paras = note.transcript.split(/\n\s*\n/).filter(Boolean);
+    paras.forEach(p => {
+      const lines = p.split("\n").filter(Boolean);
+      if (lines.length === 1) addPara(lines[0]);
+      else lines.forEach(l => addPara(l));
+    });
+    addPara("");
+  }
+
+  if (note.decisions) {
+    addPara("Decisions:", true);
+    const decParas = note.decisions.split(/\n\s*\n/).filter(Boolean);
+    decParas.forEach(p => {
+      const lines = p.split("\n").filter(Boolean);
+      if (lines.length === 1) addPara(lines[0]);
+      else lines.forEach(l => addPara(l));
+    });
+    addPara("");
+  }
+
+  if (note.actionItems && note.actionItems.length) {
+    addPara("Action Items:", true);
+
+    // Build table
+    let tbl = '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>' +
+      '<w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '<w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '<w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '<w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '<w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/>' +
+      '</w:tblBorders></w:tblPr><w:tblGrid>' +
+      '<w:gridCol w:w="2500"/><w:gridCol w:w="1500"/><w:gridCol w:w="1000"/></w:tblGrid>';
+    // Header row
+    tbl += '<w:tr><w:tc><w:p><w:r><w:b/><w:t>Task</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p><w:r><w:b/><w:t>Owner</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p><w:r><w:b/><w:t>Due</w:t></w:r></w:p></w:tc></w:tr>';
+    for (const ai of note.actionItems) {
+      tbl += '<w:tr><w:tc><w:p><w:r><w:t>' + escapeXml(ai.task) + '</w:t></w:r></w:p></w:tc>' +
+        '<w:tc><w:p><w:r><w:t>' + escapeXml(ai.owner) + '</w:t></w:r></w:p></w:tc>' +
+        '<w:tc><w:p><w:r><w:t>' + escapeXml(ai.dueDate) + '</w:t></w:r></w:p></w:tc></w:tr>';
+    }
+    tbl += '</w:tbl>';
+    docParts.push(tbl);
+    addPara("");
+  }
+
+  // Photos
+  if (note.photos && note.photos.length) {
+    for (let i = 0; i < note.photos.length; i++) {
+      const photo = note.photos[i];
+      const pngBlob = await blobToPng(photo.blob);
+      const pngData = new Uint8Array(await pngBlob.arrayBuffer());
+      const rid = "rId" + (2 + i);
+      const imgName = "image" + (i + 1) + ".png";
+
+      files["word/media/" + imgName] = pngData;
+
+      // Add relationship
+      relsXml = relsXml.replace("</Relationships>",
+        `  <Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imgName}"/>\n</Relationships>`);
+      files["word/_rels/document.xml.rels"] = new TextEncoder().encode(relsXml);
+
+      // Add content type override
+      contentTypes = contentTypes.replace("</Types>",
+        `  <Override PartName="/word/media/${imgName}" ContentType="image/png"/>\n</Types>`);
+      files["[Content_Types].xml"] = new TextEncoder().encode(contentTypes);
+
+      // Image extent
+      const img = await createImageBitmap(pngBlob);
+      let cx = emuFromPx(img.width);
+      let cy = emuFromPx(img.height);
+      const maxW = 5486400; // 6 inches
+      if (cx > maxW) {
+        cy = Math.round(cy * maxW / cx);
+        cx = maxW;
+      }
+
+      const caption = photo.caption || "";
+      const drawingXml = `<w:p><w:r><w:drawing>
+        <wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+          <wp:extent cx="${cx}" cy="${cy}"/>
+          <wp:effectExtent l="0" t="0" r="0" b="0"/>
+          <wp:docPr id="${i+1}" name="Photo ${i+1}"/>
+          <wp:cNvGraphicFramePr/>
+          <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <a:blip r:embed="${rid}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+              <a:stretch><a:fillRect/></a:stretch>
+            </a:graphicData>
+          </a:graphic>
+        </wp:inline>
+      </w:drawing></w:r></w:p>`;
+      docParts.push(drawingXml);
+
+      if (caption) {
+        docParts.push(`<w:p><w:r><w:rPr><w:i/></w:rPr><w:t>${escapeXml(caption)}</w:t></w:r></w:p>`);
+      }
+      docParts.push(`<w:p><w:r><w:t> </w:t></w:r></w:p>`);
+    }
+  }
+
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    ${docParts.join("\n    ")}
+    <w:p><w:r><w:t> </w:t></w:r></w:p>
+    <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>
+  </w:body>
+</w:document>`;
+  files["word/document.xml"] = new TextEncoder().encode(docXml);
+
+  const entries = Object.entries(files).map(([k, v]) => ({ name: k, data: v }));
+  const zipBlob = await createZip(entries);
+
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (note.title || "meeting-note").replace(/[^a-zA-Z0-9_-]/g, "_") + ".docx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("Exported .docx");
+}
+
+function exportMarkdown(note) {
+  const lines = [];
+  const title = note.title || "Untitled Meeting";
+  lines.push("# " + title);
+  lines.push("");
+
+  const dateStr = note.date ? `Date: ${note.date}` : "";
+  const timeStr = note.time ? `Time: ${note.time}` : "";
+  const durStr = note.duration ? `Duration: ${note.duration}` : "";
+  const metaParts = [dateStr, timeStr, durStr].filter(Boolean);
+  if (metaParts.length) lines.push(metaParts.join("  | "));
+  lines.push("");
+
+  if (note.attendees && note.attendees.length) {
+    lines.push("## Attendees");
+    note.attendees.forEach(a => lines.push("- " + a));
+    lines.push("");
+  }
+
+  if (note.tags && note.tags.length) {
+    lines.push("Tags: " + note.tags.map(t => "`" + t + "`").join(" "));
+    lines.push("");
+  }
+
+  if (note.type === "followup" && note.parentId) {
+    lines.push("## Follow-up");
+    lines.push("This is a follow-up to a previous meeting.");
+    if (note.followupNote) lines.push("Note: " + note.followupNote);
+    lines.push("");
+  }
+
+  if (note.aiReport) {
+    const r = note.aiReport;
+    if (r.summary) {
+      lines.push("## Executive Summary");
+      lines.push(r.summary);
+      lines.push("");
+    }
+    if (r.topics && r.topics.length) {
+      lines.push("## Topics Discussed");
+      r.topics.forEach(t => lines.push("- " + t));
+      lines.push("");
+    }
+    if (r.conclusions && r.conclusions.length) {
+      lines.push("## Conclusions");
+      r.conclusions.forEach(c => lines.push("- " + c));
+      lines.push("");
+    }
+    if (r.next_steps && r.next_steps.length) {
+      lines.push("## Next Steps / Expected at Next Meeting");
+      r.next_steps.forEach(n => lines.push("- " + n));
+      lines.push("");
+    }
+  }
+
+  if (note.transcript) {
+    lines.push("## Transcript");
+    const paras = note.transcript.split(/\n\s*\n/).filter(Boolean);
+    paras.forEach(p => {
+      const cleaned = p.trim();
+      if (cleaned) lines.push(cleaned);
+      lines.push("");
+    });
+  }
+
+  if (note.decisions) {
+    lines.push("## Decisions");
+    const decParas = note.decisions.split(/\n\s*\n/).filter(Boolean);
+    decParas.forEach(p => {
+      const cleaned = p.trim();
+      if (cleaned) lines.push(cleaned);
+      lines.push("");
+    });
+  }
+
+  if (note.actionItems && note.actionItems.length) {
+    lines.push("## Action Items");
+    lines.push("");
+    lines.push("| Task | Owner | Due Date | Status |");
+    lines.push("|------|-------|----------|--------|");
+    for (const ai of note.actionItems) {
+      lines.push(`| ${ai.task} | ${ai.owner} | ${ai.dueDate} | ${ai.status} |`);
+    }
+    lines.push("");
+  }
+
+  if (note.photos && note.photos.length) {
+    for (let i = 0; i < note.photos.length; i++) {
+      const photo = note.photos[i];
+      const safeName = "photo_" + (i + 1) + "_" + (note.title || "meeting").replace(/[^a-zA-Z0-9]/g, "_") + ".png";
+      const caption = photo.caption ? " (" + photo.caption + ")" : "";
+      lines.push("![Photo " + (i + 1) + caption + "]" + "(" + safeName + ")");
+      lines.push("");
+    }
+    lines.push("_*Photos are stored as separate files alongside this Markdown._");
+    lines.push("");
+  }
+
+  const md = lines.join("\n");
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (note.title || "meeting-note").replace(/[^a-zA-Z0-9_-]/g, "_") + ".md";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("Exported Markdown");
+}
+
+async function exportNoteForTransfer(note) {
+  const exportData = {
+    version: 1,
+    exportedAt: nowISO(),
+    note: {
+      ...note,
+      photos: await Promise.all(note.photos.map(async p => ({
+        caption: p.caption,
+        dataURL: await blobToDataURL(p.blob)
+      }))),
+      audio: note.audioBlob ? {
+        name: note.audioName || "recording",
+        dataURL: await blobToDataURL(note.audioBlob)
+      } : null
+    }
+  };
+  const md = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([md], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (note.title || "meeting-note").replace(/[^a-zA-Z0-9_-]/g, "_") + "-note.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("Note exported for transfer");
+}
+
+async function importNoteFromFile(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.note || !data.note.id) throw new Error("Invalid note file");
+    const existing = await dbGet(data.note.id);
+    if (existing) {
+      if (!confirm("A note with this ID already exists. Import will overwrite it. Continue?")) return;
+    }
+    // Restore blobs
+    if (data.note.photos) {
+      data.note.photos = await Promise.all(data.note.photos.map(async p => ({
+        caption: p.caption,
+        blob: await (p.dataURL ? blobToDataURLAsync(p.dataURL) : null)
+      })));
+    }
+    if (data.note.audio) {
+      data.note.audioBlob = await blobToDataURLAsync(data.note.audio.dataURL);
+      data.note.audioName = data.note.audio.name;
+      delete data.note.audio;
+    }
+    await dbPut(data.note);
+    showToast("Note imported successfully");
+    renderNotesList();
+  } catch (err) {
+    showToast("Import failed: " + err.message);
+  }
+}
+
+function blobToDataURLAsync(dataURL) {
+  return new Promise((resolve, reject) => {
+    fetch(dataURL).then(r => r.blob()).then(blob => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }).catch(reject);
+  });
+}
+
+/* ---------- UI State ---------- */
+let currentNoteId = null;
+let currentNote = null;
+
+/* ---------- Render Notes List ---------- */
+async function renderNotesList(search) {
+  const list = document.getElementById("notesList");
+  let notes;
+  try {
+    notes = await dbAll();
+  } catch (e) {
+    list.innerHTML = '<div class="empty-state"><h2>Error loading notes</h2><p>' + e.message + '</p></div>';
+    return;
+  }
+
+  if (search) {
+    const q = search.toLowerCase();
+    notes = notes.filter(n =>
+      (n.title || "").toLowerCase().includes(q) ||
+      (n.attendees || []).some(a => a.toLowerCase().includes(q)) ||
+      (n.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  notes.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+
+  if (!notes.length) {
+    list.innerHTML = '<div class="empty-state"><h2>' + (search ? "No matching meetings" : "No meetings yet") + '</h2><p>' + (search ? "Try a different search term." : "Tap '+ New Meeting' to create your first meeting note.") + '</p></div>';
+    return;
+  }
+
+  let html = "";
+  for (const n of notes) {
+    let thumbHtml = "";
+    if (n.photos && n.photos.length) {
+      thumbHtml = '<img class="note-card-thumb" src="' + blobToDataURLSyncStart(n.photos[0].blob) + '" alt="thumbnail" loading="lazy" onerror="this.style.display=\'none\'">';
+    } else {
+      thumbHtml = '<div class="note-card-thumb-placeholder">📅</div>';
+    }
+
+    let followupHtml = "";
+    if (n.type === "followup" && n.parentId) {
+      followupHtml = '<div class="note-card-followup">↳ Follow-up</div>';
+    }
+
+    const dateDisplay = n.date || "";
+    html += '<div class="note-card" data-id="' + n.id + '">' +
+      '<div class="note-card-head">' +
+      thumbHtml +
+      '<div class="note-card-body">' +
+      '<p class="note-card-title">' + (n.title || "Untitled Meeting") + '</p>' +
+      '<p class="note-card-meta">' + dateDisplay + '</p>' +
+      followupHtml +
+      '</div>' +
+      '</div>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+
+  // Attach click handlers
+  list.querySelectorAll(".note-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      openEditor(id);
+    });
+  });
+}
+
+// Helper to start async thumbnail load (fire and forget for list rendering)
+function blobToDataURLSyncStart(blob) {
+  // Return a data URL placeholder; actual load is async but we use onerror to hide
+  // For list rendering, we use a synchronous-ish approach: create object URL
+  try {
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    return "";
+  }
+}
+
+/* ---------- Editor ---------- */
+async function openEditor(id) {
+  currentNoteId = id;
+  if (id) {
+    currentNote = await dbGet(id);
+    if (!currentNote) {
+      showToast("Note not found");
+      showList();
+      return;
+    }
+  } else {
+    currentNote = {
+      id: generateId(),
+      type: "standalone",
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
+      title: "",
+      date: "",
+      time: "",
+      duration: "",
+      attendees: [],
+      tags: [],
+      transcript: "",
+      decisions: "",
+      actionItems: [],
+      photos: [],
+      audioBlob: null,
+      audioName: null,
+      parentId: null,
+      followupNote: ""
+    };
+  }
+
+  // Populate form
+  document.getElementById("editTitle").value = currentNote.title || "";
+  document.getElementById("editDate").value = currentNote.date || "";
+  document.getElementById("editTime").value = currentNote.time || "";
+  document.getElementById("editDuration").value = currentNote.duration || "";
+  document.getElementById("editAttendees").value = formatAttendees(currentNote.attendees || []);
+  document.getElementById("editTags").value = formatTags(currentNote.tags || []);
+
+  // Meeting type
+  const typeRadio = document.querySelector('input[name="meetingType"][value="' + currentNote.type + '"]');
+  if (typeRadio) {
+    document.querySelectorAll(".radio-option").forEach(el => el.classList.remove("active"));
+    const opt = typeRadio.closest(".radio-option");
+    if (opt) opt.classList.add("active");
+  }
+  document.getElementById("followupFields").style.display = currentNote.type === "followup" ? "block" : "none";
+
+  // Parent meeting dropdown
+  const parentSelect = document.getElementById("editParentId");
+  const existingOptions = parentSelect.options;
+  existingOptions.length = 0;
+  existingOptions.add(new Option("— Select —", ""));
+  const allNotes = await dbAll();
+  const sorted = allNotes.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+  for (const n of sorted) {
+    if (n.id !== currentNote.id) {
+      existingOptions.add(new Option((n.title || "Untitled") + " — " + (n.date || ""), n.id));
+    }
+  }
+  parentSelect.value = currentNote.parentId || "";
+
+  document.getElementById("editFollowupNote").value = currentNote.followupNote || "";
+
+  // Transcript, decisions
+  document.getElementById("editTranscript").value = currentNote.transcript || "";
+  document.getElementById("editDecisions").value = currentNote.decisions || "";
+
+  // Action items
+  renderActionItems(currentNote.actionItems || []);
+
+  // Photos
+  renderPhotos(currentNote.photos || []);
+
+  // Audio
+  if (currentNote.audioBlob) {
+    const url = URL.createObjectURL(currentNote.audioBlob);
+    document.getElementById("audioPlayer").src = url;
+    document.getElementById("audioPlayer").style.display = "block";
+    document.querySelector(".audio-box-label").textContent = currentNote.audioName || "Audio loaded";
+    document.getElementById("removeAudioBtn").style.display = "inline-flex";
+  } else {
+    document.getElementById("audioPlayer").src = "";
+    document.getElementById("audioPlayer").style.display = "none";
+    document.querySelector(".audio-box-label").textContent = "📁 Import audio file";
+    document.getElementById("removeAudioBtn").style.display = "none";
+  }
+
+  // Show editor
+  document.getElementById("listView").style.display = "none";
+  document.getElementById("editorView").style.display = "block";
+
+  // Scroll to top
+  window.scrollTo(0, 0);
+}
+
+function showList() {
+  currentNoteId = null;
+  currentNote = null;
+  document.getElementById("editorView").style.display = "none";
+  document.getElementById("listView").style.display = "block";
+  renderNotesList(document.getElementById("searchBox").value);
+}
+
+function renderActionItems(items) {
+  const container = document.getElementById("actionItemsContainer");
+  const statuses = ["Pending", "In Progress", "Done"];
+  if (!items || !items.length) {
+    container.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:14px;border:1px dashed var(--border);border-radius:8px;text-align:center;">No action items yet. Tap "+ Add Action Item" to add one.</div>';
+    return;
+  }
+
+  let html = "";
+  for (let i = 0; i < items.length; i++) {
+    const ai = items[i] || { task: "", owner: "", dueDate: "", status: "Pending" };
+    html += '<div class="action-card" data-index="' + i + '">' +
+      '<div class="action-card-head">' +
+      '<span style="font-weight:600;font-size:14px;">Action Item ' + (i + 1) + '</span>' +
+      '<button class="action-card-del" data-index="' + i + '" title="Remove">✕</button>' +
+      '</div>' +
+      '<div style="margin-bottom:6px;">' +
+      '<label class="action-card-label">Task</label>' +
+      '<input type="text" class="action-task" value="' + escapeHtml(ai.task) + '" placeholder="What needs to be done?">' +
+      '</div>' +
+      '<div style="margin-bottom:6px;">' +
+      '<label class="action-card-label">Owner</label>' +
+      '<input type="text" class="action-owner" value="' + escapeHtml(ai.owner) + '" placeholder="Who owns this?">' +
+      '</div>' +
+      '<div style="margin-bottom:6px;">' +
+      '<label class="action-card-label">Due Date</label>' +
+      '<input type="date" class="action-due" value="' + ai.dueDate + '">' +
+      '</div>' +
+      '<div>' +
+      '<label class="action-card-label">Status</label>' +
+      '<select class="action-status">' +
+      statuses.map(s => '<option value="' + s + '"' + (ai.status === s ? " selected" : "") + '>' + s + '</option>').join("") +
+      '</select>' +
+      '</div>' +
+      '</div>';
+  }
+  container.innerHTML = html;
+
+  // Attach delete handlers
+  container.querySelectorAll(".action-card-del").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = parseInt(btn.dataset.index);
+      const items = getActionItemsFromForm();
+      items.splice(index, 1);
+      renderActionItems(items);
+    });
+  });
+}
+
+function getActionItemsFromForm() {
+  const cards = document.querySelectorAll("#actionItemsContainer .action-card");
+  const items = [];
+  cards.forEach(card => {
+    items.push({
+      task: card.querySelector(".action-task").value.trim(),
+      owner: card.querySelector(".action-owner").value.trim(),
+      dueDate: card.querySelector(".action-due").value,
+      status: card.querySelector(".action-status").value
+    });
+  });
+  return items;
+}
+
+function renderPhotos(photos) {
+  const grid = document.getElementById("photoGrid");
+  if (!photos || !photos.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:12px;color:var(--muted);font-size:14px;border:1px dashed var(--border);border-radius:8px;text-align:center;">No photos yet. Tap "+ Add Photos" to attach photos to this meeting.</div>';
+    return;
+  }
+
+  let html = "";
+  for (let i = 0; i < photos.length; i++) {
+    const photo = photos[i];
+    const dataUrl = URL.createObjectURL(photo.blob);
+    html += '<div class="photo-item" data-index="' + i + '">' +
+      '<img src="' + dataUrl + '" alt="photo ' + (i + 1) + '">' +
+      '<div class="photo-item-caption">' +
+      '<input type="text" class="photo-caption" value="' + escapeHtml(photo.caption || "") + '" placeholder="Caption (optional)" data-index="' + i + '">' +
+      '</div>' +
+      '<button class="photo-item-del" data-index="' + i + '">Remove</button>' +
+      '</div>';
+  }
+  grid.innerHTML = html;
+
+  // Clean up object URLs on next render
+  grid._urls = grid._urls || [];
+  grid.querySelectorAll("img").forEach(img => {
+    grid._urls.push(img.src);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/* ---------- Save ---------- */
+async function saveCurrentNote() {
+  const title = document.getElementById("editTitle").value.trim();
+  const date = document.getElementById("editDate").value;
+  const time = document.getElementById("editTime").value;
+  const duration = document.getElementById("editDuration").value.trim();
+  const attendeesText = document.getElementById("editAttendees").value;
+  const tagsText = document.getElementById("editTags").value;
+
+  const typeEl = document.querySelector(".radio-option.active");
+  const type = typeEl ? typeEl.dataset.value : "standalone";
+
+  const parentId = document.getElementById("editParentId").value;
+  const followupNote = document.getElementById("editFollowupNote").value.trim();
+
+  const transcript = document.getElementById("editTranscript").value;
+  const decisions = document.getElementById("editDecisions").value;
+
+  const actionItems = getActionItemsFromForm();
+
+  // Photos: rebuild from DOM (captions updated)
+  const photoItems = document.querySelectorAll("#photoGrid .photo-item");
+  const photos = [];
+  photoItems.forEach(item => {
+    const idx = parseInt(item.dataset.index);
+    const captionInput = item.querySelector(".photo-caption");
+    if (currentNote.photos[idx]) {
+      photos.push({
+        blob: currentNote.photos[idx].blob,
+        caption: captionInput.value.trim()
+      });
+    }
+  });
+
+  currentNote.title = title;
+  currentNote.date = date;
+  currentNote.time = time;
+  currentNote.duration = duration;
+  currentNote.attendees = parseAttendees(attendeesText);
+  currentNote.tags = parseTags(tagsText);
+  currentNote.type = type;
+  currentNote.parentId = type === "followup" ? parentId : null;
+  currentNote.followupNote = followupNote;
+  currentNote.transcript = transcript;
+  currentNote.decisions = decisions;
+  currentNote.actionItems = actionItems;
+  currentNote.photos = photos;
+  currentNote.updatedAt = nowISO();
+
+  await dbPut(currentNote);
+  showToast("Meeting saved");
+}
+
+/* ---------- Event bindings ---------- */
+function bindEvents() {
+  // New meeting
+  document.getElementById("newMeetingBtn").addEventListener("click", () => openEditor(null));
+
+  // Back to list
+  document.getElementById("backToListBtn").addEventListener("click", showList);
+
+  // Search
+  let searchTimer;
+  document.getElementById("searchBox").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => renderNotesList(document.getElementById("searchBox").value), 200);
+  });
+
+  // Meeting type radio
+  document.querySelectorAll("#meetingTypeGroup .radio-option").forEach(el => {
+    el.addEventListener("click", () => {
+      document.querySelectorAll("#meetingTypeGroup .radio-option").forEach(o => o.classList.remove("active"));
+      el.classList.add("active");
+      const val = el.dataset.value;
+      document.getElementById("followupFields").style.display = val === "followup" ? "block" : "none";
+      // Sync radio input
+      document.querySelector('input[name="meetingType"][value="' + val + '"]').checked = true;
+    });
+  });
+
+  // Save
+  document.getElementById("saveBtn").addEventListener("click", saveCurrentNote);
+
+  // Export .docx
+  document.getElementById("exportDocxBtn").addEventListener("click", async () => {
+    if (!currentNote) return;
+    await exportDocx(currentNote);
+  });
+
+  // Export Markdown
+  document.getElementById("exportMdBtn").addEventListener("click", () => {
+    if (!currentNote) return;
+    exportMarkdown(currentNote);
+  });
+
+  // Export note (transfer)
+  document.getElementById("exportNoteBtn").addEventListener("click", async () => {
+    if (!currentNote) return;
+    await exportNoteForTransfer(currentNote);
+  });
+
+  // Delete
+  document.getElementById("deleteBtn").addEventListener("click", async () => {
+    if (!currentNoteId) return;
+    if (!confirm("Delete this meeting note? This cannot be undone.")) return;
+    await dbDelete(currentNoteId);
+    showToast("Meeting deleted");
+    showList();
+  });
+
+  // Add action item
+  document.getElementById("addActionItemBtn").addEventListener("click", () => {
+    const items = getActionItemsFromForm();
+    items.push({ task: "", owner: "", dueDate: "", status: "Pending" });
+    renderActionItems(items);
+  });
+
+  // Add photos
+  document.getElementById("addPhotosBtn").addEventListener("click", () => {
+    document.getElementById("photoInput").click();
+  });
+  document.getElementById("photoInput").addEventListener("change", async (e) => {
+    const files = e.target.files;
+    if (!files.length) return;
+    const existingPhotos = currentNote ? currentNote.photos || [] : [];
+    const newPhotos = [];
+    for (let i = 0; i < files.length; i++) {
+      newPhotos.push({
+        blob: files[i],
+        caption: ""
+      });
+    }
+    renderPhotos(existingPhotos.concat(newPhotos));
+    // Store back
+    if (currentNote) {
+      currentNote.photos = existingPhotos.concat(newPhotos);
+    }
+    document.getElementById("photoInput").value = "";
+  });
+
+  // Photo caption changes + remove
+  document.getElementById("photoGrid").addEventListener("input", (e) => {
+    if (e.target.classList.contains("photo-caption")) {
+      const idx = parseInt(e.target.dataset.index);
+      if (currentNote && currentNote.photos[idx]) {
+        currentNote.photos[idx].caption = e.target.value.trim();
+      }
+    }
+  });
+  document.getElementById("photoGrid").addEventListener("click", (e) => {
+    const btn = e.target.closest(".photo-item-del");
+    if (btn) {
+      const idx = parseInt(btn.dataset.index);
+      if (currentNote && currentNote.photos[idx]) {
+        currentNote.photos.splice(idx, 1);
+        const remaining = currentNote.photos;
+        renderPhotos(remaining);
+        // Re-assign back
+        currentNote.photos = remaining;
+      }
+    }
+  });
+
+  // Audio import
+  document.getElementById("audioInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (currentNote) {
+        currentNote.audioBlob = new Blob([ev.target.result], { type: file.type });
+        currentNote.audioName = file.name;
+        const url = URL.createObjectURL(currentNote.audioBlob);
+        document.getElementById("audioPlayer").src = url;
+        document.getElementById("audioPlayer").style.display = "block";
+        document.querySelector(".audio-box-label").textContent = file.name;
+        document.getElementById("removeAudioBtn").style.display = "inline-flex";
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  });
+
+  // Remove audio
+  document.getElementById("removeAudioBtn").addEventListener("click", () => {
+    if (currentNote) {
+      currentNote.audioBlob = null;
+      currentNote.audioName = null;
+    }
+    document.getElementById("audioPlayer").src = "";
+    document.getElementById("audioPlayer").style.display = "none";
+    document.querySelector(".audio-box-label").textContent = "📁 Import audio file";
+    document.getElementById("removeAudioBtn").style.display = "none";
+  });
+
+  // Keyboard: Esc to go back
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("editorView").style.display !== "none") {
+      showList();
+    }
+  });
+
+  // Help panel
+  document.getElementById("helpBtnList").addEventListener("click", () => {
+    document.getElementById("helpPanel").classList.add("open");
+  });
+  document.getElementById("helpBtnEditor").addEventListener("click", () => {
+    document.getElementById("helpPanel").classList.add("open");
+  });
+  document.getElementById("helpCloseBtn").addEventListener("click", () => {
+    document.getElementById("helpPanel").classList.remove("open");
+  });
+  document.getElementById("helpPanel").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("helpPanel")) {
+      document.getElementById("helpPanel").classList.remove("open");
+    }
+  });
+
+  // Import note from file (hidden file input)
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = ".json";
+  importInput.style.display = "none";
+  importInput.id = "noteImportInput";
+  document.body.appendChild(importInput);
+
+  // Add import button to list view toolbar
+  const importBtn = document.createElement("button");
+  importBtn.className = "btn btn-sm";
+  importBtn.textContent = "📥 Import Note";
+  importBtn.style.flex = "1";
+  importBtn.addEventListener("click", () => importInput.click());
+  document.querySelector("#listView .header").after(importBtn); // Actually, let's add it properly
+
+  // Move import button to the toolbar area
+  const toolbar = document.querySelector("#listView .header").parentNode;
+  const importWrap = document.createElement("div");
+  importWrap.style.cssText = "display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;";
+  importWrap.appendChild(importBtn);
+  toolbar.parentNode.insertBefore(importWrap, toolbar.nextSibling);
+
+  importInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await importNoteFromFile(file);
+    }
+    e.target.value = "";
+  });
+
+  // Settings
+  document.getElementById("settingsBtnList").addEventListener("click", openSettings);
+  document.getElementById("settingsCloseBtn").addEventListener("click", closeSettings);
+  document.getElementById("testServerBtn").addEventListener("click", testServerConnection);
+  document.getElementById("saveServerBtn").addEventListener("click", () => {
+    saveServerUrl(document.getElementById("serverUrlInput").value.trim());
+    closeSettings();
+  });
+  document.getElementById("openServerGuideBtn").addEventListener("click", () => {
+    closeSettings();
+    document.getElementById("helpPanel").classList.add("open");
+  });
+
+  // Transcribe
+  document.getElementById("transcribeBtn").addEventListener("click", transcribeAudio);
+
+  // Close settings modal on backdrop click
+  document.getElementById("settingsModal").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("settingsModal")) closeSettings();
+  });
+}
+
+// ---------- Transcription server config & settings ----------
+function getServerUrl() {
+  return localStorage.getItem("meetingNotes_serverUrl") || "http://localhost:8765";
+}
+function saveServerUrl(url) {
+  localStorage.setItem("meetingNotes_serverUrl", url);
+  showToast("Server URL saved: " + url);
+}
+
+function openSettings() {
+  document.getElementById("settingsModal").classList.add("open");
+  document.getElementById("serverUrlInput").value = getServerUrl();
+  document.getElementById("serverTestResult").textContent = "";
+}
+function closeSettings() {
+  document.getElementById("settingsModal").classList.remove("open");
+}
+
+async function testServerConnection() {
+  const url = document.getElementById("serverUrlInput").value.trim();
+  const resultEl = document.getElementById("serverTestResult");
+  if (!url) {
+    resultEl.innerHTML = '<span style="color:var(--danger);">Please enter a server URL.</span>';
+    return;
+  }
+  resultEl.innerHTML = '<span style="color:var(--accent);">Testing...</span>';
+  try {
+    const resp = await fetch(url + "/health", { signal: AbortSignal.timeout(5000) });
+    const data = await resp.json();
+    if (resp.ok && data.status === "ok") {
+      resultEl.innerHTML = '<span style="color:var(--success);">✓ Server reachable. Models loaded: ' + (data.models_loaded ? "yes" : "no") + ' (model: ' + (data.model || "unknown") + ').</span>';
+    } else {
+      resultEl.innerHTML = '<span style="color:var(--danger);">✗ Server returned status: ' + (data.status || resp.status) + '.</span>';
+    }
+  } catch (e) {
+    resultEl.innerHTML = '<span style="color:var(--danger);">✗ Cannot reach ' + url + ' — make sure whisper_server.py is running.</span>';
+  }
+}
+
+function parseActionItems(sentences) {
+  const items = [];
+  for (const sent of sentences) {
+    // LLM format: already an object {task, owner, due}
+    if (typeof sent === "object" && sent !== null) {
+      items.push({
+        task: (sent.task || "").trim(),
+        owner: (sent.owner || "").trim(),
+        dueDate: (sent.due || "").trim(),
+        status: "Pending"
+      });
+      continue;
+    }
+    // Heuristic format: a sentence string
+    let task = String(sent);
+    let owner = "";
+    const willMatch = task.match(/([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\s+will\s+(.+)/);
+    if (willMatch) {
+      owner = willMatch[1].trim();
+      task = willMatch[2].trim();
+    } else {
+      const ownerColon = task.match(/(?:owner|responsible)\s*[:]?\s*([^,;]+)/i);
+      if (ownerColon) {
+        owner = ownerColon[1].trim();
+        task = task.replace(ownerColon[0], "").trim();
+      }
+    }
+    if (task) {
+      items.push({ task: task, owner: owner, dueDate: "", status: "Pending" });
+    }
+  }
+  return items;
+}
+
+function renderInsights(data) {
+  const topicsEl = document.getElementById("insightsTopics");
+  const nextStepsEl = document.getElementById("insightsNextSteps");
+  const mode = data.summary_mode === "llm" ? "AI (local LLM)" : "AI (pattern-based)";
+
+  const summaryEl = document.getElementById("insightsSummary");
+  if (summaryEl) {
+    if (data.summary) {
+      summaryEl.innerHTML = '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">Executive summary <span style="font-weight:400;color:var(--muted);font-size:12px;">(generated by local LLM)</span></div>' +
+        '<p style="font-size:14px;margin:4px 0 0;">' + escapeHtml(data.summary) + '</p>';
+    } else {
+      summaryEl.innerHTML = '<div class="insights-empty">No executive summary generated (start the server with --llm to enable LLM summaries).</div>';
+    }
+  }
+
+  const conclEl = document.getElementById("insightsConclusions");
+  if (conclEl) {
+    if (data.conclusions && data.conclusions.length) {
+      conclEl.innerHTML = '<div style="font-weight:600;font-size:14px;margin-bottom:4px;margin-top:8px;">Conclusions</div>' +
+        '<ul class="insights-list">' + data.conclusions.map(c => '<li>' + escapeHtml(c) + '</li>').join("") + '</ul>';
+    } else {
+      conclEl.innerHTML = "";
+    }
+  }
+
+  if (data.topics && data.topics.length) {
+    topicsEl.innerHTML = '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">Topics discussed:</div>' +
+      '<ul class="insights-list">' + data.topics.map(t => '<li>' + escapeHtml(t) + '</li>').join("") + '</ul>';
+  } else {
+    topicsEl.innerHTML = '<div class="insights-empty">No topics detected.</div>';
+  }
+  if (data.next_steps && data.next_steps.length) {
+    nextStepsEl.innerHTML = '<div style="font-weight:600;font-size:14px;margin-bottom:4px;">Next steps / expected next meeting:</div>' +
+      '<ul class="insights-list">' + data.next_steps.map(s => '<li>' + escapeHtml(s) + '</li>').join("") + '</ul>';
+  } else {
+    nextStepsEl.innerHTML = '<div class="insights-empty">No next steps detected.</div>';
+  }
+}
+
+async function transcribeAudio() {
+  const btn = document.getElementById("transcribeBtn");
+  const status = document.getElementById("transcribeStatus");
+  if (!currentNote || !currentNote.audioBlob) {
+    showToast("Import an audio file first");
+    return;
+  }
+  if (!currentNote.audioName) {
+    showToast("Audio file has no name — re-import it");
+    return;
+  }
+  const serverUrl = getServerUrl();
+  btn.disabled = true;
+  status.textContent = "Transcribing... (large-v3 may take several minutes on CPU)";
+  try {
+    const ext = (currentNote.audioName || "recording").split(".").pop() || "wav";
+    const mime = ext === "mp3" ? "audio/mpeg" : ext === "wav" ? "audio/wav" : ext === "m4a" ? "audio/mp4" : ext === "ogg" ? "audio/ogg" : "audio/wav";
+    const file = new Blob([currentNote.audioBlob], { type: mime });
+    const formData = new FormData();
+    formData.append("audio", file, currentNote.audioName);
+    const resp = await fetch(serverUrl + "/transcribe", {
+      method: "POST",
+      body: formData,
+      signal: AbortSignal.timeout(600000)
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      throw new Error(data.error || "Server error " + resp.status);
+    }
+    if (!data.success) {
+      throw new Error(data.error || "Transcription failed");
+    }
+    if (data.transcript_with_speakers) {
+      currentNote.transcript = data.transcript_with_speakers;
+      document.getElementById("editTranscript").value = currentNote.transcript;
+    }
+    if (data.decisions && data.decisions.length) {
+      currentNote.decisions = data.decisions.join("\n");
+      document.getElementById("editDecisions").value = currentNote.decisions;
+    }
+    if (data.action_items && data.action_items.length) {
+      currentNote.actionItems = parseActionItems(data.action_items);
+      renderActionItems(currentNote.actionItems);
+    } else {
+      currentNote.actionItems = [];
+      renderActionItems([]);
+    }
+    renderInsights(data);
+    currentNote.aiReport = {
+      summary: data.summary || "",
+      topics: data.topics || [],
+      conclusions: data.conclusions || [],
+      next_steps: data.next_steps || []
+    };
+    showToast("Transcription done — " + data.speakers.length + " speaker(s) detected");
+  } catch (e) {
+    showToast("Transcribe failed: " + e.message);
+    console.error("Transcribe error:", e);
+  } finally {
+    btn.disabled = false;
+    status.textContent = "";
+  }
+}
+
+/* ---------- Init ---------- */
+async function init() {
+  try {
+    await openDB();
+    bindEvents();
+    renderNotesList("");
+  } catch (e) {
+    document.getElementById("notesList").innerHTML =
+      '<div class="empty-state"><h2>Error opening storage</h2><p>' + e.message + '</p><p>Please clear browser data or try a different browser.</p></div>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

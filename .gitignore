@@ -1,0 +1,8 @@
+# scratch / test artifacts
+_app.js
+_gen_tts.py
+_test*.mp3
+_result*.json
+server.log
+__pycache__/
+*.pyc
