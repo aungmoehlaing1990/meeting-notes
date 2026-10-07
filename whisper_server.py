@@ -77,6 +77,29 @@ log = logging.getLogger("whisper_server")
 
 app = Flask(__name__)
 
+
+# ----------------------------------------------------------------------
+# CORS (narrowly scoped: only the local HTML app origins)
+# The frontend is a static file served from a dev server on port 5500.
+# We deliberately do NOT use "*" and do NOT reflect arbitrary origins.
+# ----------------------------------------------------------------------
+_ALLOWED_ORIGINS = {
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+}
+
+@app.after_request
+def _cors_after_request(resp):
+    origin = request.headers.get("Origin", "")
+    if origin in _ALLOWED_ORIGINS:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Vary"] = "Origin"
+        resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        resp.headers["Access-Control-Allow-Credentials"] = "false"
+    return resp
+
+
 # ----------------------------------------------------------------------
 # Model state (loaded once at startup)
 # ----------------------------------------------------------------------
