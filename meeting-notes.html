@@ -407,7 +407,7 @@
         The server must be running for transcription to work.
       </p>
       <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;">Server URL</label>
-      <input type="text" class="field-input" id="serverUrlInput" placeholder="http://127.0.0.1:8765">
+      <input type="text" class="field-input" id="serverUrlInput" placeholder="relative (e.g. leave empty for same-origin /transcribe)">
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
         <button class="btn btn-sm" id="testServerBtn">Test Connection</button>
         <button class="btn btn-sm btn-primary" id="saveServerBtn">Save</button>
@@ -471,11 +471,11 @@
 
       <h3>Step 3: Run the server (each time before transcribing)</h3>
       <pre>python "C:\Users\Aung moe Hlaing\whisper_server.py" --hf-token YOUR_TOKEN</pre>
-      <p>Wait until you see "Server starting on http://127.0.0.1:8765" in the terminal. Keep this window open while you transcribe. (You can also set the <code>HF_TOKEN</code> environment variable instead of --hf-token.)</p>
+      <p>Wait until you see "Server starting on http://127.0.0.1:8765" in the terminal. Keep this window open while you transcribe. (The Flask backend serves both the app at <code>/</code> and the API at <code>/health</code>, <code>/transcribe</code> — leave the Server URL field empty for same-origin use. You can also set <code>HF_TOKEN</code> via <code>setx HF_TOKEN YOUR_TOKEN</code> instead of <code>--hf-token</code>.)</p>
 
       <h3>Step 4: In the app</h3>
       <ul>
-        <li>Tap <strong>⚙️</strong> (settings) in the top-right of the notes list. The server URL defaults to <code>http://127.0.0.1:8765</code>. Tap "Test Connection" to confirm it reaches the server, then "Save".</li>
+        <li>Tap <strong>⚙️</strong> (settings) in the top-right of the notes list. The Server URL is empty by default (same-origin <code>/transcribe</code>). Leave it empty. Tap "Test Connection" to confirm it reaches the server, then "Save".</li>
         <li>In the editor, import your audio, then tap <strong>🔊 Transcribe</strong>. On CPU, large-v3 can take several minutes for a long recording — the status text will tell you it's working.</li>
         <li>Results fill in automatically: speaker-labeled transcript, decisions, action items (owner extracted when it says "X will do Y"), detected topics, and next steps / follow-ups — shown in the "AI Report" section and the editable Decisions / Action Items fields.</li>
       </ul>
@@ -1751,8 +1751,10 @@ function bindEvents() {
 }
 
 // ---------- Transcription server config & settings ----------
+// Default: relative (same-origin, served by the Flask backend at /).
+// User can override in Settings for debugging / split-deployment.
 function getServerUrl() {
-  return localStorage.getItem("meetingNotes_serverUrl") || "http://127.0.0.1:8765";
+  return localStorage.getItem("meetingNotes_serverUrl") || "";
 }
 function saveServerUrl(url) {
   localStorage.setItem("meetingNotes_serverUrl", url);

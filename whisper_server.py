@@ -58,7 +58,7 @@ if os.path.isdir(_ffmpeg_bin) and _ffmpeg_bin not in os.environ.get("PATH", ""):
     os.environ["PATH"] = _ffmpeg_bin + os.pathsep + os.environ.get("PATH", "")
     print(f"[setup] Added bundled FFmpeg to PATH: {_ffmpeg_bin}")
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 
 import whisper
 
@@ -407,6 +407,17 @@ def health_info():
 # ----------------------------------------------------------------------
 # Routes
 # ----------------------------------------------------------------------
+# Serve the Meeting Notes frontend at / (single-origin deployment).
+# The HTML app uses relative fetch() calls (/health, /transcribe), so no
+# cross-origin requests are needed in normal use.
+@app.route("/")
+def serve_frontend():
+    html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "meeting-notes.html")
+    if os.path.exists(html_path):
+        return send_from_directory(os.path.dirname(html_path), "meeting-notes.html")
+    return jsonify({"error": "meeting-notes.html not found"}), 404
+
+
 @app.route("/health")
 def health():
     return jsonify(health_info())

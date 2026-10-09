@@ -4,5 +4,12 @@ _gen_tts.py
 _test*.mp3
 _result*.json
 server.log
+meeting_notes_server.log
+test_tone.wav
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
